@@ -1,6 +1,6 @@
-import { unlink } from 'fs'
-import mongoose, { Document } from 'mongoose'
 import { join } from 'path'
+import { unlink } from 'fs'
+import mongoose, { Document, Types } from 'mongoose'
 
 export interface IFile {
     fileName: string
@@ -8,6 +8,7 @@ export interface IFile {
 }
 
 export interface IProduct extends Document {
+    _id: Types.ObjectId
     title: string
     image: IFile
     category: string
