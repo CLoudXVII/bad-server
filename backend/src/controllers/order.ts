@@ -1,3 +1,4 @@
+import sanitizeHtml from 'sanitize-html';
 import { NextFunction, Request, Response } from 'express'
 import { FilterQuery, Error as MongooseError, Types } from 'mongoose'
 
@@ -299,6 +300,8 @@ export const createOrder = async (
         const { address, payment, phone, total, email, items, comment } =
             req.body
 
+        const sanitizedComment = sanitizeHtml(comment);
+
         items.forEach((id: Types.ObjectId) => {
             const product = products.find((p) => p._id.equals(id))
             if (!product) {
@@ -320,7 +323,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            sanitizedComment,
             customer: userId,
             deliveryAddress: address,
         })
