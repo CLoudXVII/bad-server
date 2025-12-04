@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
+import md5 from 'md5'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import mongoose, { Document, HydratedDocument, Model, Types } from 'mongoose'
 import validator from 'validator'
-import md5 from 'md5'
+import mongoose, { Document, HydratedDocument, Model, Types } from 'mongoose'
 
 import { ACCESS_TOKEN, REFRESH_TOKEN } from '../config'
 import UnauthorizedError from '../errors/unauthorized-error'
@@ -14,6 +14,7 @@ export enum Role {
 }
 
 export interface IUser extends Document {
+    _id: Types.ObjectId
     name: string
     email: string
     password: string
@@ -102,12 +103,11 @@ const userSchema = new mongoose.Schema<IUser, IUserModel, IUserMethods>(
     {
         versionKey: false,
         timestamps: true,
-        // Возможно удаление пароля в контроллере создания, т.к. select: false не работает в случае создания сущности https://mongoosejs.com/docs/api/document.html#Document.prototype.toJSON()
         toJSON: {
             virtuals: true,
-            transform: (_doc, ret) => {
-                const { tokens: _tokens, password: _password, _id, roles: _roles, ...rest } = ret
-                return rest
+            transform: (_doc, ret: Record<string, any>) => {
+                const { tokens, password, _id, roles, ...safe } = ret
+                return safe
             },
         },
     }
