@@ -35,13 +35,13 @@ export const getOrders = async (
 
         const filters: FilterQuery<Partial<IOrder>> = {}
 
-        if (status) {
-            if (typeof status === 'object') {
-                Object.assign(filters, status)
+        let normalizedLimit = Number(limit) < 10 ? Number(limit) : 10;
+
+        if (status !== undefined) {
+            if (typeof status !== 'string') {
+                return next(new BadRequestError('Ошибка в обработке статуса'))
             }
-            if (typeof status === 'string') {
-                filters.status = status
-            }
+            filters.status = status
         }
 
         if (totalAmountFrom) {
@@ -121,8 +121,8 @@ export const getOrders = async (
 
         aggregatePipeline.push(
             { $sort: sort },
-            { $skip: (Number(page) - 1) * Number(limit) },
-            { $limit: Number(limit) },
+            { $skip: (Number(page) - 1) * Number(normalizedLimit) },
+            { $limit: Number(normalizedLimit) },
             {
                 $group: {
                     _id: '$_id',
@@ -138,7 +138,7 @@ export const getOrders = async (
 
         const orders = await Order.aggregate(aggregatePipeline)
         const totalOrders = await Order.countDocuments(filters)
-        const totalPages = Math.ceil(totalOrders / Number(limit))
+        const totalPages = Math.ceil(totalOrders / Number(normalizedLimit))
 
         res.status(200).json({
             orders,
@@ -146,7 +146,7 @@ export const getOrders = async (
                 totalOrders,
                 totalPages,
                 currentPage: Number(page),
-                pageSize: Number(limit),
+                pageSize: Number(normalizedLimit),
             },
         })
     } catch (error) {
@@ -323,7 +323,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            sanitizedComment,
+            comment: sanitizedComment,
             customer: userId,
             deliveryAddress: address,
         })
